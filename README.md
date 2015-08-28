@@ -1,5 +1,10 @@
 # LogView
-####基于Django开发的用于远程查看LINUX主机日志的管理系统。
-***
-
-#####django1.8+bootstrap+jquery+artTemplate
+#####django1.8+mysql+bootstrap+jquery+artTemplate
+######预览图：
+![image](https://github.com/ningyuanye/LogView/blob/master/preview/0.login.jpg)
+![image](https://github.com/ningyuanye/LogView/blob/master/preview/1.home.jpg)
+![image](https://github.com/ningyuanye/LogView/blob/master/preview/2.user.jpg)
+![image](https://github.com/ningyuanye/LogView/blob/master/preview/3.passwd.jpg)
+![image](https://github.com/ningyuanye/LogView/blob/master/preview/4.project.jpg)
+![image](https://github.com/ningyuanye/LogView/blob/master/preview/5.server.jpg)
+![image](https://github.com/ningyuanye/LogView/blob/master/preview/6.logview.jpg)
