@@ -1,0 +1,434 @@
+{% extends 'base.html' %} 
+{% block title %}Server | LogsMgmt{% endblock%}
+{% block content %}
+<div class="span9">
+	<div class="row-fluid">
+		<div class="page-header">
+			<h1>
+				服务器信息 <small>所有服务器</small>
+			</h1>
+		</div>
+		<div style="margin-bottom:10px">
+			<input id="txtKey" type="text" class="input-large search-query" />
+			<button id="btnSearch" class="btn btn-info">试试搜索</button>
+		</div>
+	
+		<table class="table table-striped table-bordered table-condensed">
+			<thead>
+				<tr>
+					<th>序号</th>
+					<th>服务器名称</th>
+					<th>所属项目</th>
+					<th>环境</th>
+					<th>IP</th>
+					<th>端口</th>
+					<th>用户名</th>
+					<th>日志文件路径</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody id ="t_server"></tbody>
+		</table>
+		<div class="pagination">
+			<ul id ="u_pag">
+			</ul>
+		</div>
+		<a class="btn btn-success" id="addSrv">新增服务器</a>
+	</div>
+</div>
+
+<!-- myModal -->
+<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal"
+			aria-hidden="true">×</button>
+		<h3 id="myModalLabel"></h3>
+	</div>
+	<br />
+	<form id="srvForm" class="form-horizontal" method="POST">
+		<fieldset>
+			<div class="control-group">
+				<label class="control-label">服务器名:</label>
+				<div class="controls">
+					<input type="text" class="input-xlarge" id="srvName" name="srvName" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">IP:</label>
+				<div class="controls">
+					<input type="text" class="input-xlarge" id="srvIP" name="srvIP" maxlength="16"/>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">端口:</label>
+				<div class="controls">
+					<input type="text" class="input-xlarge" id="srvPort" name="srvPort" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">登录名:</label>
+				<div class="controls">
+					<input type="text" class="input-xlarge" id="loginUser" 
+						name="loginUser" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">密码:</label>
+				<div class="controls">
+					<input type="password" class="input-xlarge" id="loginPwd"  name="loginPwd" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">日志存放目录:</label>
+				<div class="controls">
+					<input type="text" class="input-xlarge" id="logDir" name="logDir" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">所属项目</label>
+				<div class="controls">
+					<select id="pjName" name="pjName">
+					<option></option>
+					</select>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">环境:</label>
+				<div class="controls">
+					<select id="env" name="env">
+					<option></option>
+					</select>
+				</div>
+			</div>
+			<div class="control-group">
+				<label id="testConnRes" style="text-align:center;"></label>
+			</div>
+			<div class="modal-footer">
+				<input id="btn_Test_Conn" class="btn btn-warning btn-large" style="width:36px" value="测试" />
+				<input type="submit" class="btn btn-success btn-large" value="保存" onclick="return checkServer()" />
+				<button class="btn" data-dismiss="modal" aria-hidden="true">取消</button>
+			</div>
+		</fieldset>
+	</form>
+</div>
+
+<script>
+	$(document).ready(function() {
+		$('.dropdown-menu li a').hover(
+		function() {
+			$(this).children('i').addClass('icon-white');
+		},
+		function() {
+			$(this).children('i').removeClass('icon-white');
+		});
+		
+		if($(window).width() > 760)
+		{
+			$('tr.list-users td div ul').addClass('pull-right');
+		}
+	});
+	</script>
+
+{% verbatim %}
+<script type="text/html" id="srvListscript">
+ {{each srvdata as item index}}
+	<tr class="list-srv">
+ 		<td>{{index+1}}</td>
+		<td class="js-srvName">{{item.fields.displayName}}</td>
+		<td class="js-srvProject">{{item.fields.pj}}</td>
+		<td class="js-srvEnv">{{item.fields.env}}</td>
+		<td class="js-srvIP">{{item.fields.ip}}</td>
+		<td class="js-srvPort">{{item.fields.port}}</td>
+		<td class="js-srvUser">{{item.fields.loginName}}</td>
+		<td class="js-srvLogPath">{{item.fields.logDir}}</td>
+
+<td>
+	<div class="btn-group">
+		<a class="btn btn-mini dropdown-toggle" data-toggle="dropdown"
+			href="#">Actions <span class="caret"></span></a>
+		<ul class="dropdown-menu">
+			<li><a class="editServer"><i class="icon-edit"></i> Edit</a></li>
+			<li><a class="delServer"><i class="icon-trash"></i> Delete</a></li>
+			<li class="nav-header">Connection</li>
+			<li><a class="testConn" ><i class="icon-globe"></i> Test <strong>Conncet</strong></a></li>
+		</ul>
+	</div>
+</td>
+		</tr>
+{{/each}}
+</script>
+
+<script type="text/html" id="pjListscript">
+ {{each pjdata as item}}
+	<option value="{{item.fields.pjName}}">{{item.fields.pjName}}</option>
+{{/each}}
+</script>
+
+<script type="text/html" id="envListscript">
+ {{each envdata as item}}
+	<option value="{{item.fields.envName}}">{{item.fields.envName}}</option>
+{{/each}}
+</script>
+
+{% endverbatim %}
+
+<script>
+$.ajax({
+	url : '/getAllServers/',
+	type : 'GET', 
+	dataType : 'json',
+	cache:false,
+	success : function(data) {
+		var node = $('#t_server');
+		var newHtml = template('srvListscript',{'srvdata':data});
+		node.append(newHtml);
+		
+		
+		$(".testConn").click(function(){
+			var $this = $(this),
+				   $tr = $this.closest('tr'),
+				   srvname = $tr.find('.js-srvName').text()
+		   $.ajax({ url:"{% url 'getServerInfo' %}",
+  				  type:"POST",
+  				  dataType : 'json',
+  				  data:{srvName:srvname},
+  				  success:function(res){
+  					$.ajax({ url:"{% url 'testConnServer' %}",
+		  				  type:"POST",
+		  				  data:{srvIP:res.ip,srvPort:res.port,loginUser:res.loginName,loginPwd:res.loginPasswd},
+		  				  success:function(dat){
+		  					  if(dat.indexOf('success') >=0)
+		  					  	alert('connect success!');
+  							  else
+  								alert('connect failed!');		  						
+		  				  }
+  					});
+           		}
+       	 	});
+		});
+		
+          
+          $("#addSrv").click(function(){
+				$("#myModalLabel").text("新增服务器")
+				$("#srvName").attr("readonly",false);
+				$("#myModal").modal('show');
+				$("#srvForm").attr("action",'{% url 'addServer' %}')
+				$("#srvName").val("");
+				$("#srvIP").val("");
+				$("#srvPort").val("");
+				$("#loginUser").val("");
+				$("#loginPwd").val("");
+				$("#logDir").val("");
+				$("#pjName").val("");
+				$("#env").val("");
+				$("#testConnRes").text('');
+		});
+          
+          $(".editServer").click(function(){
+        	  	$("#myModalLabel").text("编辑服务器")
+				$("#srvName").attr("readonly",true);
+        	  	$("#testConnRes").text('');
+				$("#myModal").modal('show');
+				$("#srvForm").attr("action",'{% url 'updateServer' %}');
+  				var $this = $(this), 
+  						$tr = $this.closest('tr'),
+  			   			srvName = $tr.find('.js-srvName').text();
+  				$("#srvName").val(srvName);
+  				$.ajax({ url:"{% url 'getServerInfo' %}",
+  				  type:"POST",
+  				  data:{srvName:srvName},
+  				  success:function(res){
+  					$("#srvIP").val(res.ip);
+  					$("#srvPort").val(res.port);
+  					$("#loginUser").val(res.loginName);
+  					$("#loginPwd").val(res.loginPasswd);
+  					$("#logDir").val(res.logDir);
+  					$("#pjName").val(res.pjName);
+  					$("#env").val(res.envName);
+  				  }
+  		  		});
+  		});
+          
+		$(".delServer").click(function(){
+			if(confirm('确定删除吗？')){
+				var $this = $(this),
+			   			$tr = $this.closest('tr'),
+			   			srvName = $tr.find('.js-srvName').text();
+				$.ajax({ url:"{% url 'delServer' %}",
+				   type:"POST",
+				   data:{srvName:srvName},
+				   success:function(res){
+					   window.location.reload();
+				   }
+		  		 });
+			}
+		});
+		
+	},
+	
+	error : function(error) {
+		console.log(error);
+	}
+});
+
+$("#btn_Test_Conn").click(function(){
+	$.ajax({
+		url : '{% url 'testConnServer' %}',
+		type : 'POST', 
+		cache:false,
+		data:{srvIP:$("#srvIP").attr('value'),srvPort:$("#srvPort").attr('value'),loginUser:$("#loginUser").attr('value'),loginPwd:$("#loginPwd").attr('value')},
+		success : function(dat) {
+			if(dat.indexOf('success') >=0){
+				$("#testConnRes").text('connect success!');
+				$("#testConnRes").css("color","green");
+			}
+		  	else{
+				$("#testConnRes").text('connect failed!');	
+				$("#testConnRes").css("color","red");
+		  	}
+		}
+	});
+});
+
+$("#btnSearch").click(function(){
+	keywd=$("#txtKey").val()
+	$.ajax({
+		url : '{% url 'getFilterServers' %}',
+		cache:false,
+		data:{keyword:keywd},
+		success : function(dat) {
+			var node = $('#t_server');
+			  node.empty();
+				var newHtml = template('srvListscript',{'srvdata':dat});
+				node.append(newHtml);
+				$('#u_pag').hide();
+		}
+	});
+});
+
+$('#txtKey').keydown(function(e){
+	if(e.keyCode==13){
+		$("#btnSearch").click();
+	}
+});
+	
+$.ajax({
+	url : '{% url 'getAllEnvs' %}',
+	type : 'GET', 
+	dataType : 'json',
+	cache:false,
+	success : function(data) {
+		var node = $('#env');
+		var newHtml = template('envListscript',{'envdata':data});
+		node.append(newHtml);
+	},
+	error : function(error) {
+		console.log(error);
+	}
+});
+
+$.ajax({
+	url : '{% url 'getAllProjects' %}',
+	type : 'GET', 
+	dataType : 'json',
+	cache:false,
+	success : function(data) {
+		var node = $('#pjName');
+		var newHtml = template('pjListscript',{'pjdata':data});
+		node.append(newHtml);
+	},
+	error : function(error) {
+		console.log(error);
+	}
+});
+
+$.ajax({
+	url : '{% url 'getPageCount' %}',
+	type : 'POST', 
+	dataType : 'json',
+	cache:false,
+	success : function(data) {
+		var node = $('#u_pag');
+		//node.append('<li><a class="pageLink">Prev</a></li>')
+		for(var i=1;i<=data.srvCount;i++){
+			node.append('<li><a class="pageLink">'+i+'</a></li>');
+		}
+		//node.append('<li><a class="pageLink">Next</a></li>')
+		
+		$(".pageLink").click(function(){
+			var pageNum = $(this).text()
+			$.ajax({ url:"{% url 'getPageServers' %}",
+			  type:"GET",
+			  data:{page:pageNum},
+			  success:function(res){
+				  var node = $('#t_server');
+				  node.empty();
+					var newHtml = template('srvListscript',{'srvdata':res});
+					node.append(newHtml);
+			  }
+			});
+		});
+	},
+	error : function(error) {
+		console.log(error);
+	}
+});
+
+</script>
+
+<script>
+function checkServer() {
+	srvName = $("#srvName");
+	srvIP = $("#srvIP");
+	srvPort = $("#srvPort");
+	loginUser = $("#loginUser");
+	loginPwd = $("#loginPwd");
+	logDir = $("#logDir");
+	pjName = $("#pjName");
+	env = $("#env");
+	if (srvName.val().trim() == "") {
+		alert("服务器名称不得为空");
+		srvName.focus();
+		return false;
+	}
+	if (srvIP.val().trim()  == "") {
+		alert("IP不得为空");
+		srvIP.focus();
+		return false;
+	}
+	if (srvPort.val().trim()  == "") {
+		alert("端口不得为空");
+		srvPort.focus();
+		return false;
+	}
+	if (loginUser.val().trim()  == "") {
+		alert("登录用户名不得为空");
+		loginUser.focus();
+		return false;
+	}
+	if (loginPwd.val().trim()  == "") {
+		alert("登录密码不得为空");
+		loginPwd.focus();
+		return false;
+	}
+	if (logDir.val().trim()  == "") {
+		alert("日志路径不得为空");
+		logDir.focus();
+		return false;
+	}
+	if (pjName.val().trim()  == "") {
+		alert("所属项目不得为空");
+		pjName.focus();
+		return false;
+	}
+	if (env.val().trim()  == "") {
+		alert("所属环境不得为空");
+		env.focus();
+		return false;
+	}
+	return true;
+}
+</script>
+
+{% endblock %}

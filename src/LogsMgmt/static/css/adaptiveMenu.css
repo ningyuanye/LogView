@@ -1,0 +1,223 @@
+body,div,ul,li,span,a{
+	padding: 0;
+	margin: 0;
+}
+a{
+	text-decoration: none;
+}
+ul{
+	list-style: none;
+}
+.container{
+	width:100%;
+	height:100%;
+	padding:0;
+	font-family: Microsoft Yahei, Hiragino Sans GB, WenQuanYi Micro Hei, sans-serif;
+	font-size: 14px;
+}
+.header{
+	position: fixed;
+	z-index: 1;
+	width:100%;
+	height:50px;
+	background-color: #363636;
+}
+
+.leftMenu{
+	float:left;
+	height: 100%;
+	padding-top:50px;
+	background-color:#363636; 
+	position:absolute;
+}
+.content{
+	width:auto;
+	height: auto;
+	padding:10px;
+	margin-top:50px;
+	margin-left:170px;
+	background-color: #fff;
+}
+.clearfix{
+	display: block;
+}
+.clearfix:before,
+.clearfix:after{
+	content: '.';
+	height: 0;
+	display: block;
+}
+.clearfix:after{
+	clear:both;
+}
+
+/* $menu css */
+ul.pcc-root-menu{
+	width:170px;
+	height:auto;
+	border: none;
+	border-right: 1px solid #eee;
+	border-top: 1px solid #eee;
+}
+
+/* 每一个li下的a标签，用于显示菜单项图标+文字内容*/
+ul.pcc-root-menu .submenu-a{
+	display: block;
+	width:100%;
+	padding:0 10px 0;
+	overflow: hidden;
+	font-size: 1.1em;
+	color: #fff;
+	text-decoration: none;
+	cursor: pointer;
+}
+ul.pcc-root-menu span.menu-name{
+	height: 50px;
+	/* word-wrap: break-word;
+	word-break: break-all; */
+	width: auto;
+}
+
+ul.pcc-root-menu li{
+	position: relative;
+	z-index: 10000;
+}
+
+
+/* 用于菜单折叠时的隐藏菜单*/
+ul.pcc-root-menu  .menu-fold-hide{
+	display: none !important;
+}
+
+/* 子菜单不显示*/
+ul.pcc-root-menu > li ul{
+	display:none;
+}
+
+/* 一级菜单*/
+ul.pcc-root-menu > li{
+	border-bottom: 1px solid #eee;
+}
+ul.pcc-root-menu > li > a.submenu-a{
+	max-height: 50px;
+	line-height: 50px;
+	background-color:#363636; 
+	color: #fff;
+	word-wrap: break-word;
+	word-break: break-all;
+}
+ul.pcc-root-menu > li > a.submenu-a:hover{
+	background-color: #fff;
+	color: #2BB;
+}
+ul.pcc-root-menu > li.active >a.submenu-a{
+	background-color: #428BCA;
+	font-weight: bold;
+	color: #fff;
+}
+
+/* 二级菜单*/
+ul.pcc-root-menu > li > ul> li > a.submenu-a{
+	padding-left:20px;
+	background-color: #fff;
+	font-size:14px;
+	color:#333;
+	height: 40px;
+	line-height: 40px;
+	word-wrap: break-word;
+	word-break: break-all;
+}
+ul.pcc-root-menu > li > ul> li > a.submenu-a:hover{
+	background-color: #8DE;
+	color: #fff;
+}
+ul.pcc-root-menu > li > ul> li.active > a.submenu-a{
+	/*background-color: #428BCA;
+	font-weight: bold;
+	color: #fff;*/
+	background-color: #8DE;
+	color: #fff;
+	font-weight: bold;
+}
+
+/* 二级菜单收起后的样式*/
+ul.pcc-root-menu > li > ul.level2-ul{
+	position:absolute;
+	top:0px;
+	left:39px;
+	border:1px solid #ddd;
+	border-left:none;
+	width:150px;
+	display: none;
+}
+ul.pcc-root-menu > li > ul> li > a.level2-submenu-a{
+	padding-left: 10px;
+}
+
+/* 三级菜单*/
+ul.pcc-root-menu > li > ul> li >ul{
+	border:none;
+	border-bottom: 1px solid #eee;
+}
+ul.pcc-root-menu > li > ul> li >ul > li > a.submenu-a{
+	padding-left: 35px;
+	height: 30px;
+	line-height: 30px;
+	font-size: 12px;
+	background-color: #fff;
+	color: #333;
+	word-wrap: break-word;
+	word-break: break-all;
+}
+ul.pcc-root-menu > li > ul> li >ul > li > a.submenu-a:hover{
+	/* background-color: #8DE; 
+	color: #fff;*/
+	background-color: #DFF8FF;
+	color: #2BB;
+}
+ul.pcc-root-menu > li > ul> li >ul > li.active > a.submenu-a{
+	/* background-color: #428BCA;
+	font-weight: bold;
+	color: #fff; */
+	background-color: #DFF8FF;
+	color: #2BB;
+	font-weight: bold;
+}
+
+/* 三级菜单收起后的样式*/
+ul.pcc-root-menu > li > ul> li >ul.level3-ul{
+	position:absolute;
+	top:0px;
+	left:149px;
+	width:150px;
+	display: none;
+	border: 1px solid #eee;
+}
+ul.pcc-root-menu > li > ul> li >ul > li > a.level3-submenu-a{
+	padding-left: 10px;
+	height: 40px;
+	line-height: 40px;
+}
+
+
+/* 展开/收起按钮样式*/
+ul.pcc-root-menu li#foldBtn{
+	cursor:pointer;
+}
+
+
+input:required,textarea:required{
+	background:url(../image/required.png) no-repeat 0% center;
+} 
+input,textarea{
+	border:1px solid #aaa;
+	padding:10px 10px 10px 15px;
+	font-size: 16px;
+}
+
+
+
+
+
+
+

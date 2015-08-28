@@ -1,0 +1,205 @@
+{% extends 'base.html' %} 
+
+{% block title %}Users | LogsMgmt{% endblock%} 
+
+{% block content %}
+<div class="span9">
+	<div class="row-fluid">
+		<div class="page-header">
+			<h1>
+				用户信息 <small>所有用户</small>
+			</h1>
+		</div>
+		<table class="table table-striped table-bordered table-condensed">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Level</th>
+					<th>Status</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody id ="t_users"></tbody>
+		</table>
+		
+		<a class="btn btn-success" data-toggle="modal" data-target="#myModal">新增用户</a>
+	</div>
+</div>
+
+<script>
+	$(document).ready(function() {
+		$('.dropdown-menu li a').hover(
+		function() {
+			$(this).children('i').addClass('icon-white');
+		},
+		function() {
+			$(this).children('i').removeClass('icon-white');
+		});
+		
+		if($(window).width() > 760)
+		{
+			$('tr.list-users td div ul').addClass('pull-right');
+		}
+	});
+	</script>
+
+<!-- myModal -->
+<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal"
+			aria-hidden="true">×</button>
+		<h3 id="myModalLabel">新增用户</h3>
+	</div>
+	<br />
+	<form class="form-horizontal" method='post' action="{% url 'addUser' %}">
+		<fieldset>
+			<div class="control-group">
+				<label class="control-label">用户名:</label>
+				<div class="controls">
+					<input type="text" class="input-xlarge" id="username"
+						name="username" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">密码:</label>
+				<div class="controls">
+					<input type="password" class="input-xlarge" id="password"
+						name="password" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">确认密码:</label>
+				<div class="controls">
+					<input type="password" class="input-xlarge" id="repassword"
+						name="repassword" />
+				</div>
+			</div>
+			<div class="modal-footer">
+				<input type="submit" onclick="return checkAddUser()" class="btn btn-success btn-large" value="保存" />
+				<button class="btn" data-dismiss="modal" aria-hidden="true">取消</button>
+			</div>
+		</fieldset>
+	</form>
+</div>
+
+{% verbatim %}
+<script type="text/html" id="userListscript">
+ {{each userdata as item index}}
+	<tr class="list-users">
+ 		<td>{{index+1}}</td>
+		<td class="js-username">{{item.fields.username}}</td>
+		{{if item.fields.level=='0'}}
+            <td>超级管理员</td>
+   		{{else}}
+			<td>管理员</td>
+		{{/if}}
+ 		{{if item.fields.status=='0'}}
+             <td><span class="label label-success">Active</span></td>
+    	{{else}}
+			<td><span class="label label-important">Inactive</span></td>
+		{{/if}}
+
+<td>
+	<div class="btn-group">
+		<a class="btn btn-mini dropdown-toggle" data-toggle="dropdown"
+			href="#">Actions <span class="caret"></span></a>
+		<ul class="dropdown-menu">
+			<li><a class="delUser"><i class="icon-trash"></i> Delete</a></li>
+			<li class="nav-header">Permissions</li>
+			{{if item.fields.status=='0'}}
+				<li><a class="makeInactive" data-status="1"><i class="icon-lock"></i> Make <strong>Inactive</strong></a></li>
+			{{else}}
+				<li><a class="makeActive" data-status="0"><i class="icon-lock"></i> Make <strong>Active</strong></a></li>
+			{{/if}}
+		</ul>
+	</div>
+</td>
+		</tr>
+{{/each}}
+</script>
+{% endverbatim %}
+
+<script>
+$.ajax({
+	url : '/getAllUsers/',
+	type : 'GET', 
+	dataType : 'json',
+	cache:false,
+	success : function(data) {
+		//var users=[{'username': 'admin', 'status': '0', 'level': '0'},{'username': 'zhouqs', 'status': '1', 'level': '1'}];
+		var node = $('#t_users');
+		var newHtml = template('userListscript',{'userdata':data});
+		node.append(newHtml);
+		
+		$(".makeInactive,.makeActive").click(function(){
+			var $this = $(this),
+				   $tr = $this.closest('tr'),
+				   username = $tr.find('.js-username').text(),
+				   status = $this.data('status');
+            $.ajax({ url:"{% url 'updateUserStatus' %}",
+                    type:"POST",
+                    data:{username:username,status:status},
+                    success:function(res){
+                    	window.location.reload();
+                    	//if(res='success')
+                    		//alert("操作成功");
+                     	//$this.closest('td').pre().html('<span class="label label-success">Active</span>'')
+                    }
+            });
+        });
+           
+		$(".delUser").click(function(){
+			if(confirm('确定删除吗？')){
+				var $this = $(this),
+			   			$tr = $this.closest('tr'),
+			   			username = $tr.find('.js-username').text();
+				$.ajax({ url:"{% url 'delUser' %}",
+				   type:"POST",
+				   data:{username:username},
+				   success:function(res){
+					   window.location.reload();
+				   }
+		  		 });
+			}
+		});
+	},
+	
+	error : function(error) {
+		console.log(error);
+	}
+});
+</script>
+
+<script>
+function checkAddUser() {
+	username = $("#username");
+	password = $("#password");
+	repassword = $("#repassword");
+	if (username.val().trim() == "") {
+		alert("用户名不得为空");
+		username.focus();
+		return false;
+	}
+	if (password.val() == "") {
+		alert("密码不得为空");
+		password.focus();
+		return false;
+	}
+	if (repassword.val() == "") {
+		alert("确认密码不得为空");
+		repassword.focus();
+		return false;
+	}
+	if (password.val() != repassword.val()) {
+		alert("密码不一致");
+		repassword.focus();
+		return false;
+	}
+	return true;
+}
+</script>
+
+
+{% endblock %}

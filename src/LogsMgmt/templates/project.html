@@ -1,0 +1,203 @@
+{% extends 'base.html' %} 
+{% block title %}Project | LogsMgmt{% endblock%} 
+
+{% block content %}
+<div class="span9">
+	<div class="row-fluid">
+		<div class="page-header">
+			<h1>
+				项目信息 <small>所有项目</small>
+			</h1>
+		</div>
+		<table class="table table-striped table-bordered table-condensed">
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>Code</th>
+					<th>Name</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody id ="t_pj"></tbody>
+		</table>
+		
+		<a id="addPjLink" class="btn btn-success" data-toggle="modal" data-target="#myModal">新增项目</a>
+	</div>
+</div>
+
+<script>
+	$(document).ready(function() {
+		$('.dropdown-menu li a').hover(
+		function() {
+			$(this).children('i').addClass('icon-white');
+		},
+		function() {
+			$(this).children('i').removeClass('icon-white');
+		});
+		
+		if($(window).width() > 760)
+		{
+			$('tr.list-pj td div ul').addClass('pull-right');
+		}
+	});
+</script>
+
+<!-- myModal -->
+<div id="myModal" class="modal hide fade" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal"
+			aria-hidden="true">×</button>
+		<h3 id="myModalLabel">新增项目</h3>
+	</div>
+	<br />
+	<form class="form-horizontal" method="post" action="{% url 'addProject' %}">
+		<fieldset>
+			<div class="control-group">
+				<label class="control-label">项目编码:</label>
+				<div class="controls">
+					<input type="text" class="input-xlarge"  id="addPjCode" name="pjCode" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">项目名:</label>
+				<div class="controls">
+					<input type="text" class="input-xlarge" id="addPjName" name="pjName" />
+				</div>
+			</div>
+			<div class="modal-footer">
+				<input type="submit" onclick="return checkAddPj()"  class="btn btn-success btn-large" value="保存" />
+				<button class="btn" data-dismiss="modal" aria-hidden="true">取消</button>
+			</div>
+		</fieldset>
+	</form>
+</div>
+
+<!-- EditModal -->
+<div id="myEditModal" class="modal hide fade" tabindex="-1" role="dialog"
+	aria-labelledby="myModalLabel" aria-hidden="true">
+	<div class="modal-header">
+		<button type="button" class="close" data-dismiss="modal"
+			aria-hidden="true">×</button>
+		<h3 id="myEditModalLabel">编辑项目</h3>
+	</div>
+	<br />
+	<form class="form-horizontal" method="post" action="{% url 'updateProject' %}" >
+		<fieldset>
+			<div class="control-group">
+				<label class="control-label">项目编码:</label>
+				<div class="controls">
+					<input type="text" class="input-xlarge" id="editPjCode" name="pjCode" readonly="true" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">项目名:</label>
+				<div class="controls">
+					<input type="text" class="input-xlarge" id="editPjName" name="pjName" />
+				</div>
+			</div>
+			<div class="modal-footer">
+				<input type="submit" onclick="return checkEditPj()" class="btn btn-success btn-large" value="保存" />
+				<button class="btn" data-dismiss="modal" aria-hidden="true">取消</button>
+			</div>
+		</fieldset>
+	</form>
+</div>
+
+
+	
+{% verbatim %}
+<script type="text/html" id="pjListscript">
+ {{each pjdata as item index}}
+	<tr class="list-pj">
+ 		<td>{{index+1}}</td>
+		<td class="js-pjCode">{{item.fields.pjCode}}</td>
+		<td class="js-pjName">{{item.fields.pjName}}</td>
+<td>
+	<div class="btn-group">
+		<a class="btn btn-mini dropdown-toggle" data-toggle="dropdown"
+			href="#">Actions <span class="caret"></span></a>
+		<ul class="dropdown-menu">
+			<li><a class="editProject"><i class="icon-edit"></i> Edit</a></li>
+			<li><a class="delProject"><i class="icon-trash"></i> Delete</a></li>
+		</ul>
+	</div>
+</td>
+		</tr>
+{{/each}}
+</script>
+{% endverbatim %}
+
+<script>
+$.ajax({
+	url : '/getAllProjects/',
+	type : 'GET', 
+	dataType : 'json',
+	cache:false,
+	success : function(data) {
+		var node = $('#t_pj');
+		var newHtml = template('pjListscript',{'pjdata':data});
+		node.append(newHtml);
+        
+		$(".editProject").click(function(){
+			var $this = $(this),
+				   $tr = $this.closest('tr');
+		    $("#editPjCode").val($tr.find('.js-pjCode').text()); 
+		    $("#editPjName").val($tr.find('.js-pjName').text()); 
+			$("#myEditModal").modal('show');
+		});
+		
+		$(".delProject").click(function(){
+			if(confirm('确定删除吗？')){
+				var $this = $(this),
+				   $tr = $this.closest('tr');
+				   pjcode = $tr.find('.js-pjCode').text();
+				$.ajax({ url:"{% url 'delProject' %}",
+					   type:"POST",
+					   data:{pjCode:pjcode},
+					   success:function(res){
+						   window.location.reload();
+				 		}
+		   		});
+			}
+		});
+	},
+	
+	error : function(error) {
+		console.log(error);
+	}
+});
+</script>
+
+<script>
+function checkAddPj() {
+	pjcode = $("#addPjCode");
+	pjname = $("#addPjName");
+	if (pjcode.val().trim() == "") {
+		alert("项目编码不得为空");
+		pjcode.focus();
+		return false;
+	}
+	if (pjname.val() == "") {
+		alert("项目名称不得为空");
+		pjname.focus();
+		return false;
+	}
+	return true;
+}
+</script>
+
+<script>
+function checkEditPj() {
+	pjname = $("#editPjName");
+	if (pjname.val() == "") {
+		alert("项目名称不得为空");
+		pjname.focus();
+		return false;
+	}
+	return true;
+}
+</script>
+
+{% endblock %}
+

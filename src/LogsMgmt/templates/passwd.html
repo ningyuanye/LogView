@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Security | LogsMgmt{% endblock %}
+
+{% block content %}
+<div class="span9">
+	<div class="row-fluid">
+		<div class="page-header">
+			<h1>
+				密码安全 <small>更新密码</small>
+			</h1>
+		</div>
+		<form class="form-horizontal" action="{% url 'updatePassword' %}" method="post">
+			<fieldset>
+				<div class="control-group">
+					<label class="control-label">原密码：</label>
+					<div class="controls">
+						<input type="text" class="input-xlarge" id="oldpwd" name="oldpwd" />
+					</div>
+				</div>
+				<div class="control-group">
+					<label class="control-label">新密码：</label>
+					<div class="controls">
+						<input type="password" class="input-xlarge" id="newpwd"
+							name="newpwd" />
+					</div>
+				</div>
+				<div class="control-group">
+					<label class="control-label">确认新密码：</label>
+					<div class="controls">
+						<input type="password" class="input-xlarge" id="renewpwd"
+							name="newpwd" />
+					</div>
+				</div>
+				<div class="form-actions">
+					<input type="submit"  onclick="return check()" class="btn btn-success btn-large" value="更新" />
+					<button class="btn" type="reset">取消</button>
+				</div>
+			</fieldset>
+		</form>
+	</div>
+</div>
+
+<script>
+function check() {
+	oldpwd = $("#oldpwd");
+	newpwd = $("#newpwd");
+	renewpwd = $("#renewpwd");
+	if (oldpwd.val().trim() == "") {
+		alert("原密码不得为空");
+		oldpwd.focus();
+		return false;
+	}
+	if (newpwd.val() == "") {
+		alert("新密码不得为空");
+		newpwd.focus();
+		return false;
+	}
+	if (renewpwd.val() == "") {
+		alert("确认密码不得为空");
+		renewpwd.focus();
+		return false;
+	}
+	if (newpwd.val() != renewpwd.val()) {
+		alert("密码不一致");
+		renewpwd.focus();
+		return false;
+	}
+	return true;
+}
+</script>
+
+{% endblock %}

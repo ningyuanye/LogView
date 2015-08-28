@@ -1,0 +1,171 @@
+$(function(){
+	/**
+	 * ----------------------------------------------------
+	 * 功能:收起菜单 or 展开菜单 按钮点击事件
+	 * @param  $foldBtn :当前按钮的dom对象
+	 * @param  isUnfoldStatus :用来判断当前按钮状态是否为展开状态
+	 * @param  $leftMenu :左边的菜单
+	 * @return {[type]}            [description]
+	 * ----------------------------------------------------
+	 */
+	$('#foldBtn').click(function(){
+		/*
+		 * 功能:展开--->缩小，点击该按钮时
+			左边菜单动态收起，收起完成后，改变按钮状态为收起样式
+		 */
+		var $foldBtn = $(this),
+			isUnfoldStatus = $foldBtn.find('span.glyphicon').hasClass('glyphicon-circle-arrow-left'),
+			$leftMenu = $foldBtn.closest('.pcc-root-menu');
+		if(isUnfoldStatus){
+
+			//菜单缩小
+			$leftMenu.animate({
+				width: '40px'},
+				'normal', function() {
+					$foldBtn.find('.glyphicon.glyphicon-circle-arrow-left').removeClass('glyphicon-circle-arrow-left').addClass('glyphicon-circle-arrow-right');
+					//菜单状态属性该为：折叠
+					$leftMenu.data('status','fold');
+
+					//缩小完成后，子菜单改为绝对定位
+					$('ul.pcc-root-menu > li >ul').addClass('level2-ul');
+					$('ul.pcc-root-menu > li >ul >li >a.submenu-a').addClass('level2-submenu-a');
+					$('ul.pcc-root-menu > li >ul > li >ul').addClass('level3-ul');
+					$('ul.pcc-root-menu > li >ul > li >ul >li >a.submenu-a').addClass('level3-submenu-a');
+
+					//被激活的二级菜单及其子菜单添加menu-fold-hide样式（隐藏）
+					$('ul.pcc-root-menu > li li.active').parentsUntil('.js-pcc-menu-li-level1','ul').addClass('menu-fold-hide');
+					//
+					$('ul.pcc-root-menu > li li.active').last().children('ul').addClass('menu-fold-hide');
+					//隐藏没有被激活的所有子菜单
+					$('ul.pcc-root-menu ul').not('.menu-fold-hide').css('display','none');
+
+					//绑定收起后一级菜单的事件
+					$('ul.pcc-root-menu >li').not('#foldBtn').on('mouseover',function(event){
+						$(this).find('.menu-fold-hide').removeClass('menu-fold-hide');
+					}).on('mouseout',function(){
+						$(this).find('li.active').parentsUntil('.js-pcc-menu-li-level1','ul').addClass('menu-fold-hide');
+					});
+
+					//缩小完成后，重新绑定一级菜单的点击事件
+					/*$('ul.pcc-root-menu > li').not('#foldBtn').off('click').on('click',function(event){
+						var $this = $(this);
+						openMenu($(this));
+						event.stopPropagation();
+						$('ul.pcc-root-menu > li ul').css('display');
+					});*/
+			});
+
+			//内容块放大（即缩小margin-left至40px）
+			$('.content').animate({marginLeft: '40px'});
+
+		}else{
+
+			/*
+				功能:缩小--->展开，点击该按钮时
+				左边菜单动态展开，展开完成后，改变按钮状态为展开样式，并将菜单的宽度修改为‘auto’，且取消li高的限制
+			 */
+			
+			//内容块缩小（即扩大margin-left至170px
+			$('.content').animate({marginLeft: '170px'});
+			$('ul.pcc-root-menu .menu-fold-hide').removeClass('menu-fold-hide');
+
+			//进行展开前，子菜单改为相对定位
+			$('ul.pcc-root-menu > li >ul').removeClass('level2-ul');
+			$('ul.pcc-root-menu > li >ul >li >a.submenu-a').removeClass('level2-submenu-a');
+			$('ul.pcc-root-menu > li >ul > li >ul').removeClass('level3-ul');
+			$('ul.pcc-root-menu > li >ul > li >ul >li >a.submenu-a').removeClass('level3-submenu-a');
+
+			//进行展开前，重新绑定一级菜单的点击事件
+			$('ul.pcc-root-menu li').not('#foldBtn').off('mouseover').off('mouseout');
+			/*$('.pcc-root-menu').find('li').on('click',function(event){
+				openMenu($(this));
+				event.stopPropagation();
+			});*/
+
+			$leftMenu.width('40px').animate({
+				width: '170px'},
+				'normal',
+				function() {
+					$foldBtn.find('.glyphicon.glyphicon-circle-arrow-right').removeClass('glyphicon-circle-arrow-right').addClass('glyphicon-circle-arrow-left');
+					//菜单状态属性该为：展开
+					$leftMenu.data('status','unfold');
+
+					//防止li自动缩小时溢出的内容会挤入下一行
+					/*$('ul.pcc-root-menu li').css('height','auto');*/
+			});
+		}
+		
+	});
+	
+	//绑定所有菜单项点击事件
+	$('.pcc-root-menu').find('li').not('#foldBtn').on('click',function(event){
+		openMenu($(this));
+		event.stopPropagation();
+	});
+
+	//点击菜单外的其余部分，则隐藏子菜单
+	$(document).on('click',function(e){
+		var $pccRootMenu = $('.pcc-root-menu'),
+			menuStatus = $('.pcc-root-menu').data('status');
+		//折叠状态
+		if(menuStatus=='fold'){
+			if(!$pccRootMenu.is(e.target) && $pccRootMenu.has(e.target).length === 0){
+				/*$('ul.pcc-root-menu > li >ul').css('display','none');*/
+				$('ul.pcc-root-menu > li >ul').addClass('menu-fold-hide');
+			}
+		}
+    });
+	
+});
+
+/**
+ * 功能:菜单项点击事件：若存在子集菜单，则自动展开/合拢子集菜单
+ * 若为展开，则改li添加active的class,反之，则删除active的class
+ * 	       
+ */
+function openMenu($liMenuItem){
+	var $this = $liMenuItem,
+		//当前li的子菜单
+		$submenu = $this.children('ul'),
+		//当前菜单根元素
+		$pccRootMenu = $('.pcc-root-menu'),
+		//当前菜单状态：展开or折叠
+		menuStatus = $pccRootMenu.data('status'),
+		//用于判断当前传入的$liMenuItem元素li是否是激活状态
+		isLiMenuItemActive = $this.hasClass('active'),
+		//用于判断当前元素的子菜单是否隐藏
+		isSubmenuHidden = $submenu.length>0?$submenu.is(':hidden'):false;
+
+
+	//若菜单状态是折叠时
+	if(menuStatus=='fold'){
+		$this.siblings('li').find('ul').css('display','none');
+	}
+
+	//若存在子菜单且子菜单为隐藏状态，同时当前菜单没有被激活，则动态展开(),其余的两种状态不需要操作
+	if(isSubmenuHidden && !isLiMenuItemActive){			//当前菜单未被选中，且子菜单隐藏
+		$submenu.slideDown();
+	}else if(!isSubmenuHidden && isLiMenuItemActive){	//当前菜单被选中，且子菜单已显示
+		$submenu.slideUp();
+	}
+
+	//触发（即若当前元素不是激活状态）
+	if(!isLiMenuItemActive){
+		$this.addClass('active');
+		//当前li的所有父类li添加active样式,并删除父类li的同级li下具有active样式的class及子元素中含有active样式的class
+		$this.parentsUntil('.pcc-root-menu','li').addClass('active')
+			.siblings('li.active').removeClass('active')
+			.find('.active').removeClass('active');
+		//删除当前li的同级li下的active class
+		$this.siblings('li').removeClass('active').find('.active').removeClass('active');
+		//删除父类的其余同级li下的active class
+		
+
+		//找到当前li的一级菜单，删除该以及菜单的其余同级菜单的active class
+		$this.closest('.js-pcc-menu-li-level1').siblings('li.active').removeClass('active');
+
+	}else{
+		//取消激活状态，并取消原激活的子类
+		$this.removeClass('active').find('.active').removeClass('active');
+	}
+}

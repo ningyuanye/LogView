@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin | LogsMgmt{% endblock %}
+
+{% block content %}
+        <div class="span9">
+          <div class="well hero-unit">
+            <h1>Welcome, {{user}}</h1>
+            <p>这里是描述这里是描述这里是描述这里是描述这里是描述这里是描述这里是描述这里是描述这里是描述这里是描述这里是描述这里是描述这里是描述这里是描述 </p>
+            <p><a class="btn btn-success btn-large" href="../server">服务器管理 &raquo;</a></p>
+          </div>
+          
+          <div class="row-fluid">
+            <div class="span3">
+              <h3>项目总数</h3>
+              <p><a href="../project" class="badge badge-inverse" id="pjCount"></a></p>
+            </div>
+            <div class="span3">
+              <h3>服务器总数</h3>
+              <p><a href="../server" class="badge badge-inverse" id="srvCount"></a></p>
+            </div>
+          </div>
+		  <br />
+		  
+		  <div class="row-fluid">
+			<div class="page-header">
+				<h1>服务器信息 <small>最新添加</small></h1>
+			</div>
+			<table class="table table-bordered">
+				<thead>
+					<tr>
+						<th>序号</th>
+						<th>服务器名称</th>
+						<th>所属项目</th>
+						<th>环境</th>
+						<th>IP</th>
+						<th>端口</th>
+						<th>用户名</th>
+						<th>日志文件路径</th>
+					</tr>
+				</thead>
+				<tbody id ="t_server"></tbody>
+			</table>
+		  </div>
+        </div>
+        
+{% verbatim %}
+<script type="text/html" id="srvListscript">
+ {{each srvdata as item index}}
+	<tr class="list-srv">
+ 		<td>{{index+1}}</td>
+		<td class="js-srvName">{{item.fields.displayName}}</td>
+		<td class="js-srvProject">{{item.fields.pj}}</td>
+		<td class="js-srvEnv">{{item.fields.env}}</td>
+		<td class="js-srvIP">{{item.fields.ip}}</td>
+		<td class="js-srvPort">{{item.fields.port}}</td>
+		<td class="js-srvUser">{{item.fields.loginName}}</td>
+		<td class="js-srvLogPath">{{item.fields.logDir}}</td>
+	</tr>
+{{/each}}
+</script>
+{% endverbatim %}
+
+
+<script>
+$.ajax({
+	url : '/getLastServers/',
+	type : 'GET', 
+	dataType : 'json',
+	cache:false,
+	success : function(data) {
+		var node = $('#t_server');
+		var newHtml = template('srvListscript',{'srvdata':data});
+		node.append(newHtml);
+	},
+});
+
+$.ajax({
+	url : '{% url 'getProjectCount' %}',
+	type : 'POST', 
+	dataType : 'json',
+	cache:false,
+	success : function(data) {
+		$("#pjCount").text(data.pjCount)
+	},
+});
+
+$.ajax({
+	url : '{% url 'getServerCount' %}',
+	type : 'POST', 
+	dataType : 'json',
+	cache:false,
+	success : function(data) {
+		$("#srvCount").text(data.srvCount)
+	},
+});
+</script>
+{% endblock %}

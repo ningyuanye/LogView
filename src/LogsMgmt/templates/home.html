@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+	<link href="/static/img/fav.ico" rel="shortcut icon">
+    <title>Home | LogsMgmt</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin panel developed with the Bootstrap from Twitter.">
+    <meta name="author" content="travis">
+
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+	<link href="/static/css/site.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-responsive.css" rel="stylesheet">
+    <!--[if lt IE 9]>
+      <script src="js/html5.js"></script>
+    <![endif]-->
+
+<style type="text/css">
+    .dropdown:hover .menu-top {
+    display: block;
+}
+
+.dropdown-submenu{
+    position:relative;
+}
+
+.dropdown-submenu > .dropdown-menu{
+    top:0;
+    left:100%;
+    margin-top:-6px;
+    margin-left:-1px;
+    -webkit-border-radius:0 6px 6px 6px;
+    -moz-border-radius:0 6px 6px 6px;
+    border-radius:0 6px 6px 6px;
+}
+
+.dropdown-submenu:hover > .dropdown-menu{
+    display:block;
+}
+
+.dropdown-submenu > a:after{
+    display:block;
+    content:" ";
+    float:right;
+    width:0;
+    height:0;
+    border-color:transparent;
+    border-style:solid;
+    border-width:5px 0 5px 5px;
+    border-left-color:#cccccc;
+    margin-top:5px;
+    margin-right:-10px;
+}
+
+.dropdown-submenu:hover > a:after{
+    border-left-color:#ffffff;
+}
+
+.dropdown-submenu .pull-left{
+    float:none;
+}
+
+.dropdown-submenu.pull-left > .dropdown-menu{
+    left:-100%;
+    margin-left:10px;
+    -webkit-border-radius:6px 0 6px 6px;
+    -moz-border-radius:6px 0 6px 6px;
+    border-radius:6px 0 6px 6px;
+}
+</style>
+  </head>
+  <body>
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container-fluid">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="../welcome">XXXX日志查看系统</a>
+          <div class="btn-group pull-right">
+			<a class="btn" ><i class="icon-user"></i> {{user}}</a>
+            <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
+              <span class="caret"></span>
+            </a>
+            <ul class="dropdown-menu">			  
+              <li><a href="/logout/">Logout</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+        
+    <script src="/static/js/jquery.js"></script>
+	<script src="/static/js/bootstrap.min.js"></script>
+	<script src="/static/js/template.js"></script>
+	
+	<div class="content" style="margin-left:20px;margin-right:20px;">
+		<p>
+				<select id="se_pjName" name="se_pjName">
+				</select>
+				<select id="se_envName" name="se_envName" >
+				</select>
+				<select id="se_srvName" name="se_srvName">
+				</select>
+		</p>
+		<p class="text-info" id="ServerInfo" ></p>
+		<p>
+			<button id="btn_tailLog" name="btn_tailLog" class="btn btn-success">查看实时日志</button>
+			<button id="btn_stopLog" name="btn_stopLog" style="margin-left:5px"	class="btn btn-danger">停止实时日志</button>
+			<input type="text" id="tb_RowCount_Begin" style="margin-left:10px;margin-top:10px;width:80px" name="tb_RowCount_Begin" placeholder="输入开始行号" onkeyup="value=value.replace(/[^\d]/g,'')" />
+			<span>-</span>
+			<input type="text" id="tb_RowCount_End" style="margin-top:10px;width:80px" name="tb_RowCount_End" placeholder="输入结束行号" onkeyup="value=value.replace(/[^\d]/g,'')" />
+			<button id="btn_hisLog" name="btn_hisLog" class="btn btn-info">查看历史日志</button>
+			<!--  <button id="btn_downLog" name="btn_downLog" style="margin-left:5px" class="btn btn-info">下载日志</button> -->
+		</p>
+		<div id="logContent" style="background: #061F28; color: #FFF;margin-top:5px;padding-left:5px;overflow:auto;max-height:470px;font-family: 'Monaco,Menlo,Consolas,';font-size: 12px"></div>
+
+		<!--  <p  style="background:#000; color:#090;" >Here is  log content...</p>-->
+
+	</div>
+
+{% verbatim %}
+<script type="text/html" id="pjListscript">
+<option>--请选择项目--</option>
+{{each pjdata as item}}
+	<option value="{{item.fields.pjName}}" >{{item.fields.pjName}}</option>
+{{/each}}
+</script>
+
+<script type="text/html" id="envListscript">
+<option>--请选择环境--</option>
+{{each envdata as item}}
+	<option value="{{item.envName}}">{{item.envName}}</option>
+{{/each}}
+</script>
+
+<script type="text/html" id="srvListscript">
+<option>--请选择服务器--</option>
+{{each srvdata as item}}
+	<option value="{{item.fields.displayName}}">{{item.fields.displayName}}</option>
+{{/each}}
+</script>
+
+<script type="text/html" id="srvInfoscript">
+服务器名：<span id="srvDisplay" name="srvDisplay"></span><br>
+IP：<span id="srvIp" name="srvIp">{{srvdata.ip}}</span><br>
+日志存放路径：<span id="logPath" name="logPath">{{srvdata.logDir}}</span>
+</script>
+{% endverbatim %}
+
+<script>
+$.ajax({
+	url : '{% url 'getAllProjects' %}',
+	type : 'GET', 
+	dataType : 'json',
+	cache:false,
+	success : function(data) {
+		var node = $('#se_pjName');
+		var newHtml = template('pjListscript',{'pjdata':data});
+		node.append(newHtml);
+	},
+	error : function(error) {
+		console.log(error);
+	}
+});
+
+$(function(){
+	$('#btn_stopLog').on('click',function(evt){
+		clearInterval(interval);
+	});
+	
+	$("#se_pjName").on('change',function(){
+		var pjname = $(this).val()
+	   $.ajax({ url:"{% url 'getEnvForProject' %}",
+				  dataType : 'json',
+				  data:{pjName:pjname},
+				  success:function(res){
+					  var node = $('#se_envName');
+					  node.empty();
+						var newHtml = template('envListscript',{'envdata':res});
+						node.append(newHtml);
+       			}
+   	 	});
+	});
+	
+	$("#se_envName").on('change',function(){
+		var pjname = $("#se_pjName").val()
+		var envname = $(this).val()
+	   $.ajax({ url:"{% url 'getProject2Env2Server' %}",
+				  dataType : 'json',
+				  data:{pjName:pjname,envName:envname},
+				  success:function(res){
+					  var node = $('#se_srvName');
+					  node.empty();
+						var newHtml = template('srvListscript',{'srvdata':res});
+						node.append(newHtml);
+       			}
+   	 	});
+	});
+	
+	$("#se_srvName").on('change',function(){
+		var srvname = $(this).val()
+		if(srvname!='--请选择服务器--'){
+			$.ajax({ url:"{% url 'getServerInfo' %}",
+			      type:'POST',
+				  dataType : 'json',
+				  data:{srvName:srvname},
+				  success:function(res){
+					  var node = $('#ServerInfo');
+					  node.empty();
+						var newHtml = template('srvInfoscript',{'srvdata':res});
+						node.append(newHtml);
+						$("#srvName").val(srvname);
+						$("#srvDisplay").text(srvname);					
+	       			},
+				  complete:function(){
+					  $.ajax({ url:"{% url 'getLineCount' %}",
+					      type:'POST',
+						  data:{srvName:srvname},
+						  success:function(res){
+								$('#btn_hisLog').text("查看历史日志"+'('+res+')')
+			     			}
+			 	 	});
+				  }
+	   	 	});
+			
+		}
+	   
+	});
+	
+	$("#btn_tailLog").click(function(){
+		var srvname = $("#se_srvName")
+		if (srvname.val() == "--请选择服务器--" || srvname.val() == null) {
+			alert("请先选择服务器！");
+			srvname.focus();
+			//return false;
+		}
+		else{
+			srvname=srvname.val()
+			var line = 0;
+			interval = null;
+			var logContent = $('#logContent')
+			logContent.empty();
+			$.ajax({ url:"{% url 'getLineNum' %}",
+		      type:'POST',
+			  data:{srvName:srvname},
+			  success:function(res){
+				  line=res;		
+				  interval = setInterval(function(){
+						$.ajax({
+							  url:'{% url 'printLog' %}',
+							  type:'POST',
+							  //dataType : 'json',
+							  cache:false,
+							  data:{srvName:srvname,lineNum:line},
+							  success:function(res){
+								  if(res.logContent){
+									  line=parseInt(res.newLineNum)+1
+									  var resHtml = $('<h5>').append(res.logContent.replace(/\n/g,'<br/>').replace(/\t/g,'&emsp;&emsp;'));								  
+									  logContent.append(resHtml);
+									  logContent.scrollTop(logContent[0].scrollHeight-logContent.height());
+								  }	
+							  }
+						    });
+					},3000);
+				},
+				error:function(res){
+					  alert("服务器连接失败！");
+				}
+			});
+       	  }
+   	 	});
+	
+	$("#btn_hisLog").click(function(){
+		var srvname = $("#se_srvName")
+		if (srvname.val() == "--请选择服务器--" || srvname.val() == null) {
+			alert("请先选择服务器！");
+			srvname.focus();
+			//return false;
+		}
+		else{
+			srvname=srvname.val()
+			str=$('#btn_hisLog').text()
+			TotalCount=str.substring(7,str.length-1)
+			lineBeginNum=$('#tb_RowCount_Begin').val().trim()
+			if (lineBeginNum=="")
+				lineBeginNum='1'
+			lineEndNum=$('#tb_RowCount_End').val().trim()
+			if (lineEndNum=="")
+				lineEndNum=TotalCount
+			if(parseInt(lineEndNum)-parseInt(lineBeginNum)<=1000&&parseInt(lineEndNum)-parseInt(lineBeginNum)>=0){
+				var logContent = $('#logContent')
+				logContent.empty();
+				$.ajax({
+				  url:'{% url 'printHistoryLog' %}',
+				  type:'POST',
+				  cache:false,
+				  data:{srvName:srvname,lineBeginNum:lineBeginNum,lineEndNum:lineEndNum},
+				  success:function(res){
+					  if(res){
+						  var resHtml = $('<h5>').append(res.replace(/\n/g,'<br/>').replace(/\t/g,'&emsp;&emsp;'));								  
+						  logContent.append(resHtml);
+						  logContent.scrollTop(logContent[0].scrollHeight-logContent.height());
+					  }	
+				  },
+				  error:function(res){
+					  alert("服务器连接失败！");
+				  }
+			    });
+			}	
+			else{
+				if(parseInt(lineEndNum)-parseInt(lineBeginNum)<0)
+					alert('开始行号不得大于结束行号！');
+				else
+					alert('目前可显示的行数上限为1000，请调小后再试！');
+			}
+		}
+	});
+})
+</script>
+
+  </body>
+</html>
