@@ -34,7 +34,7 @@ def set2md5(src):
     return dest
 
 pageSize=15
-cryptKey='wwwsmarter56.com'
+cryptKey='1wdvgy8uhbfe3rgy'
 cryptMode = AES.MODE_CBC
 def encrypt(text):
     cryptor = AES.new(cryptKey,cryptMode,b'0000000000000000')
